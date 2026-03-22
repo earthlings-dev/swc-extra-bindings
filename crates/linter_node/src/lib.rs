@@ -3,10 +3,10 @@ extern crate napi_derive;
 
 mod util;
 
-use std::{backtrace::Backtrace, env, panic::set_hook};
+use std::{backtrace::Backtrace, env, panic::set_hook, sync::Arc};
 
-use anyhow::{bail, Context};
-use napi::{bindgen_prelude::*, Task};
+use anyhow::{Context, bail};
+use napi::{Task, bindgen_prelude::*};
 use serde::{Deserialize, Serialize};
 use swc_common::{FileName, Mark, SyntaxContext};
 use swc_ecma_ast::*;
@@ -14,7 +14,7 @@ use swc_ecma_lints::{config::LintConfig, rule::Rule, rules::LintParams};
 use swc_ecma_parser::Syntax;
 use swc_ecma_transforms_base::resolver;
 use swc_ecma_visit::VisitMutWith;
-use swc_nodejs_common::{deserialize_json, get_deserialized, MapErr};
+use swc_nodejs_common::{MapErr, deserialize_json, get_deserialized};
 
 use crate::util::try_with;
 
@@ -23,12 +23,12 @@ use crate::util::try_with;
 // apply lints, maybe in parallel
 // emit diagnostics
 
-#[napi::module_init]
+#[napi_derive::module_init]
 fn init() {
     if cfg!(debug_assertions) || env::var("SWC_DEBUG").unwrap_or_default() == "1" {
         set_hook(Box::new(|panic_info| {
             let backtrace = Backtrace::force_capture();
-            println!("Panic: {:?}\nBacktrace: {:?}", panic_info, backtrace);
+            println!("Panic: {panic_info:?}\nBacktrace: {backtrace:?}");
         }));
     }
 }
@@ -91,7 +91,7 @@ fn lint_inner(code: &str, opts: LintOptions) -> anyhow::Result<TransformOutput> 
             None => FileName::Anon,
         };
 
-        let fm = cm.new_source_file(filename, code.into());
+        let fm = cm.new_source_file(Arc::new(filename), code);
 
         let mut errors = vec![];
 

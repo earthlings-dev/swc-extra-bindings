@@ -1,6 +1,6 @@
-use anyhow::{anyhow, Error};
-use swc_common::{errors::Handler, sync::Lrc, FilePathMapping, SourceMap};
-use swc_error_reporters::handler::{try_with_handler, HandlerOpts};
+use anyhow::{Error, anyhow};
+use swc_common::{FilePathMapping, SourceMap, errors::Handler, sync::Lrc};
+use swc_error_reporters::handler::{HandlerOpts, try_with_handler};
 
 pub fn try_with<F, Ret>(op: F) -> Result<Ret, Error>
 where
@@ -32,4 +32,5 @@ where
             }
         },
     )
+    .map_err(|e| e.to_pretty_error())
 }

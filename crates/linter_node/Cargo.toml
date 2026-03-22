@@ -1,7 +1,6 @@
 [package]
-authors = ["Mathis Møller"]
 build = "build.rs"
-edition = "2021"
+edition.workspace = true
 exclude = ["artifacts.json", "index.node"]
 license = "Apache-2.0"
 name = "linter_node"
@@ -15,28 +14,23 @@ crate-type = ["cdylib"]
 [features]
 
 [build-dependencies]
-napi-build = { version = "2" }
+napi-build = { workspace = true }
 
 [dependencies]
-anyhow = "1"
-napi = { version = "2", default-features = false, features = [
-  "napi3",
-  "serde-json",
-] }
-napi-derive = { version = "2", default-features = false, features = [
-  "type-def",
-] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-swc_atoms = "0.6.5"
-swc_common = { version = "0.33.12", features = ["diagnostic-serde"] }
-swc_ecma_ast = "0.110.17"
-swc_ecma_lints = "0.90.10"
-swc_ecma_minifier = "0.190.18"
-swc_ecma_parser = "0.141.37"
-swc_ecma_transforms_base = "0.135.11"
-swc_ecma_visit = "0.96.17"
-swc_error_reporters = "0.17.12"
-swc_nodejs_common = "0.0.8"
-tracing = { version = "0.1.37", features = ["release_max_level_info"] }
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+anyhow = { workspace = true }
+napi = { workspace = true, features = ["napi3", "serde-json"] }
+napi-derive = { workspace = true, features = ["type-def"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+swc_atoms = { workspace = true }
+swc_common = { workspace = true, features = ["diagnostic-serde"] }
+swc_ecma_ast = { workspace = true }
+swc_ecma_lints = { workspace = true }
+swc_ecma_minifier = { workspace = true }
+swc_ecma_parser = { workspace = true }
+swc_ecma_transforms_base = { workspace = true }
+swc_ecma_visit = { workspace = true }
+swc_error_reporters = { workspace = true }
+swc_nodejs_common = { workspace = true }
+tracing = { workspace = true, features = ["release_max_level_info"] }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }

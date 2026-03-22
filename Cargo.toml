@@ -1,6 +1,0 @@
-[workspace]
-members = ["crates/css_node", "crates/html_node", "crates/linter_node"]
-
-[profile.release]
-codegen-units = 1
-lto = "fat"

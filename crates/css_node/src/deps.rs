@@ -1,10 +1,10 @@
 use serde::Serialize;
-use swc_atoms::JsWord;
+use swc_atoms::Atom;
 use swc_common::Spanned;
 use swc_css_ast::{ImportHref, ImportPrelude, Url, UrlValue};
 use swc_css_codegen::{
-    writer::basic::{BasicCssWriter, BasicCssWriterConfig, IndentType, LineFeed},
     CodeGenerator, CodegenConfig, Emit,
+    writer::basic::{BasicCssWriter, BasicCssWriterConfig, IndentType, LineFeed},
 };
 use swc_css_visit::{Visit, VisitWith};
 
@@ -32,7 +32,7 @@ pub struct Import {
 
 #[derive(Debug, Serialize)]
 pub struct CssUrl {
-    pub value: JsWord,
+    pub value: Atom,
 }
 
 impl Visit for Analyzer {
@@ -81,7 +81,7 @@ fn normalize_url(n: &Url) -> Option<CssUrl> {
     })
 }
 
-fn parse_url(s: &JsWord) -> CssUrl {
+fn parse_url(s: &Atom) -> CssUrl {
     CssUrl { value: s.clone() }
 }
 
@@ -100,9 +100,10 @@ where
             linefeed: LineFeed::LF,
         },
     );
-    let mut gen = CodeGenerator::new(wr, CodegenConfig { minify: true });
+    let mut codegen = CodeGenerator::new(wr, CodegenConfig { minify: true });
 
-    gen.emit(&n)
+    codegen
+        .emit(&n)
         .expect("failed to print node for dependency analysis");
 
     buf

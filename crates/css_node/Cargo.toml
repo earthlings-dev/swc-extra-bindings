@@ -1,7 +1,6 @@
 [package]
-authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 build = "build.rs"
-edition = "2021"
+edition.workspace = true
 exclude = ["artifacts.json", "index.node"]
 license = "Apache-2.0"
 name = "css_node"
@@ -15,32 +14,24 @@ crate-type = ["cdylib"]
 [features]
 
 [build-dependencies]
-napi-build = { version = "1" }
+napi-build = { workspace = true }
 
 [dependencies]
-anyhow = "1"
-napi = { version = "2", default-features = false, features = [
-  "napi3",
-  "serde-json",
-] }
-napi-derive = { version = "2", default-features = false, features = [
-  "type-def",
-] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-swc_common = { version = "0.33.12", features = [
-  "sourcemap",
-  "diagnostic-serde",
-] }
-swc_atoms = "0.6.5"
-swc_css_ast = "0.140.14"
-swc_css_codegen = "0.151.23"
-swc_css_compat = "0.27.24"
-swc_css_minifier = "0.116.24"
-swc_css_modules = "0.29.26"
-swc_css_parser = "0.150.22"
-swc_css_visit = "0.139.14"
-swc_error_reporters = "0.17.12"
-swc_nodejs_common = "0.0.8"
-tracing = { version = "0.1.37", features = ["release_max_level_info"] }
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+anyhow = { workspace = true }
+napi = { workspace = true, features = ["napi3", "serde-json"] }
+napi-derive = { workspace = true, features = ["type-def"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+swc_atoms = { workspace = true }
+swc_common = { workspace = true, features = ["sourcemap", "diagnostic-serde"] }
+swc_css_ast = { workspace = true }
+swc_css_codegen = { workspace = true }
+swc_css_compat = { workspace = true }
+swc_css_minifier = { workspace = true }
+swc_css_modules = { workspace = true }
+swc_css_parser = { workspace = true }
+swc_css_visit = { workspace = true }
+swc_error_reporters = { workspace = true }
+swc_nodejs_common = { workspace = true }
+tracing = { workspace = true, features = ["release_max_level_info"] }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }

@@ -1,37 +1,35 @@
 #[macro_use]
 extern crate napi_derive;
 
-use std::{
-    backtrace::Backtrace, collections::HashMap, env, fmt::Write, panic::set_hook, sync::Arc,
-};
+use std::{backtrace::Backtrace, collections::HashMap, env, fmt::Write, panic::set_hook};
 
-use anyhow::{bail, Context};
-use napi::{bindgen_prelude::*, Task};
+use anyhow::{Context, bail};
+use napi::{Task, bindgen_prelude::*};
 use serde::{Deserialize, Serialize};
-use swc_atoms::JsWord;
-use swc_common::FileName;
+use swc_atoms::Atom;
+use swc_common::{FileName, source_map::DefaultSourceMapGenConfig, sync::Lrc};
 use swc_css_codegen::{
-    writer::basic::{BasicCssWriter, BasicCssWriterConfig, IndentType, LineFeed},
     CodeGenerator, CodegenConfig, Emit,
+    writer::basic::{BasicCssWriter, BasicCssWriterConfig, IndentType, LineFeed},
 };
 use swc_css_compat::{
     compiler::{Compiler, Config},
     feature::Features,
 };
 use swc_css_visit::{VisitMutWith, VisitWith};
-use swc_nodejs_common::{deserialize_json, get_deserialized, MapErr};
+use swc_nodejs_common::{MapErr, deserialize_json, get_deserialized};
 
 use crate::util::try_with;
 
 mod deps;
 mod util;
 
-#[napi::module_init]
+#[napi_derive::module_init]
 fn init() {
     if cfg!(debug_assertions) || env::var("SWC_DEBUG").unwrap_or_default() == "1" {
         set_hook(Box::new(|panic_info| {
             let backtrace = Backtrace::force_capture();
-            println!("Panic: {:?}\nBacktrace: {:?}", panic_info, backtrace);
+            println!("Panic: {panic_info:?}\nBacktrace: {backtrace:?}");
         }));
     }
 }
@@ -109,15 +107,15 @@ pub struct CssModulesConfig {
 
 #[derive(Debug)]
 struct CssModuleTransformConfig {
-    file_name: Arc<FileName>,
-    file_name_hash: u8,
+    file_name: Lrc<FileName>,
+    file_name_hash: u128,
     pattern: Vec<CssClassNameSegment>,
 }
 
 #[derive(Debug)]
 enum CssClassNameSegment {
     /// A literal string segment.
-    Literal(JsWord),
+    Literal(Atom),
     /// The base file name.
     Name,
     /// The original class name.
@@ -129,13 +127,13 @@ enum CssClassNameSegment {
 #[derive(Serialize)]
 #[serde(tag = "type")]
 pub enum CssClassName {
-    Local { name: JsWord },
-    Global { name: JsWord },
-    Import { name: JsWord, from: JsWord },
+    Local { name: Atom },
+    Global { name: Atom },
+    Import { name: Atom, from: Atom },
 }
 
 impl swc_css_modules::TransformConfig for CssModuleTransformConfig {
-    fn new_name_for(&self, local: &JsWord) -> JsWord {
+    fn new_name_for(&self, local: &Atom) -> Atom {
         let mut buf = String::new();
 
         for segment in &self.pattern {
@@ -252,7 +250,7 @@ fn minify_inner(code: &str, opts: MinifyOptions) -> anyhow::Result<TransformOutp
                 None => FileName::Anon,
             };
 
-            let fm = cm.new_source_file(filename, code.into());
+            let fm = cm.new_source_file(Lrc::new(filename), code.to_string());
 
             let mut errors = vec![];
             let ss = swc_css_parser::parse_file::<swc_css_ast::Stylesheet>(
@@ -319,16 +317,16 @@ fn minify_inner(code: &str, opts: MinifyOptions) -> anyhow::Result<TransformOutp
                             linefeed: LineFeed::LF,
                         },
                     );
-                    let mut gen = CodeGenerator::new(wr, CodegenConfig { minify: true });
+                    let mut codegen = CodeGenerator::new(wr, CodegenConfig { minify: true });
 
-                    gen.emit(&ss).context("failed to emit")?;
+                    codegen.emit(&ss).context("failed to emit")?;
                 }
 
                 buf
             };
 
             let map = if opts.source_map {
-                let map = cm.build_source_map(&src_map);
+                let map = cm.build_source_map(&src_map, None, DefaultSourceMapGenConfig);
                 let mut buf = vec![];
                 map.to_writer(&mut buf)
                     .context("failed to generate sourcemap")?;
@@ -355,7 +353,7 @@ fn transform_inner(code: &str, opts: TransformOptions) -> anyhow::Result<Transfo
             None => FileName::Anon,
         };
 
-        let fm = cm.new_source_file(filename, code.into());
+        let fm = cm.new_source_file(Lrc::new(filename), code.to_string());
 
         let mut errors = vec![];
         let ss = swc_css_parser::parse_file::<swc_css_ast::Stylesheet>(
@@ -417,8 +415,8 @@ fn transform_inner(code: &str, opts: TransformOptions) -> anyhow::Result<Transfo
             let result = swc_css_modules::compile(
                 &mut ss,
                 CssModuleTransformConfig {
-                    file_name: Arc::new(fm.name.clone()),
-                    file_name_hash: fm.name_hash as _,
+                    file_name: fm.name.clone(),
+                    file_name_hash: fm.name_hash,
                     pattern: config
                         .parse_pattern()
                         .context("failed to parse the pattern for CSS Modules")?,
@@ -483,21 +481,21 @@ fn transform_inner(code: &str, opts: TransformOptions) -> anyhow::Result<Transfo
                         BasicCssWriterConfig::default()
                     },
                 );
-                let mut gen = CodeGenerator::new(
+                let mut codegen = CodeGenerator::new(
                     wr,
                     CodegenConfig {
                         minify: opts.minify,
                     },
                 );
 
-                gen.emit(&ss).context("failed to emit")?;
+                codegen.emit(&ss).context("failed to emit")?;
             }
 
             buf
         };
 
         let map = if opts.source_map {
-            let map = cm.build_source_map(&src_map);
+            let map = cm.build_source_map(&src_map, None, DefaultSourceMapGenConfig);
             let mut buf = vec![];
             map.to_writer(&mut buf)
                 .context("failed to generate sourcemap")?;
