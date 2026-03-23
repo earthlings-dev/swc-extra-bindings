@@ -1,10 +1,9 @@
 {
   "name": "@swc/css",
-  "packageManager": "yarn@3.2.3",
   "version": "0.0.29",
   "description": "Super-fast alternative for postcss",
   "homepage": "https://swc.rs",
-  "main": "./index.js",
+  "main": "./index.ts",
   "author": "강동윤 <kdy1997.dev@gmail.com>",
   "license": "Apache-2.0",
   "keywords": [
@@ -12,7 +11,7 @@
     "css"
   ],
   "engines": {
-    "node": ">=14"
+    "bun": ">=1.3.11"
   },
   "repository": {
     "type": "git",
@@ -44,17 +43,46 @@
   },
   "scripts": {
     "artifacts": "napi artifacts --dist scripts/npm",
-    "prepublishOnly": "tsc -d && napi prepublish -p scripts/npm --tagstyle npm",
+    "prepublishOnly": "napi prepublish -p scripts/npm --tagstyle npm",
     "pack": "wasm-pack",
-    "build:ts": "tsc -d",
-    "build:wasm": "npm-run-all \"pack -- build ./crates/wasm --scope swc {1} -t {2} \" --",
-    "build": "tsc -d && napi build --platform --cargo-name css_node --js ./binding.js --dts binding.d.ts -p css_node --release --cargo-cwd ../..",
-    "build:dev": "tsc -d && napi build --platform --cargo-name css_node --js ./binding.js --dts binding.d.ts -p css_node --cargo-cwd ../..",
+    "build:wasm": "bun run pack -- build ./crates/wasm --scope swc",
+    "build": "napi build --cwd ../../.. --manifest-path Cargo.toml --platform -p css_node --output-dir extra-bindings/packages/css --js binding.js --dts binding.d.ts --release",
+    "build:dev": "napi build --cwd ../../.. --manifest-path Cargo.toml --platform -p css_node --output-dir extra-bindings/packages/css --js binding.js --dts binding.d.ts",
     "test": "echo 'done!'",
     "version": "napi version -p scripts/npm"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^2.16.1",
-    "typescript": "^5.1.6"
-  }
+    "@napi-rs/cli": "catalog:",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
+  },
+  "types": "./index.ts",
+  "exports": {
+    ".": {
+      "bun": "./index.ts",
+      "default": "./index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "optionalDependencies": {
+    "@swc/css-android-arm64": "workspace:*",
+    "@swc/css-darwin-arm64": "workspace:*",
+    "@swc/css-linux-x64-musl": "workspace:*",
+    "@swc/css-linux-x64-gnu": "workspace:*",
+    "@swc/css-darwin-x64": "workspace:*",
+    "@swc/css-win32-x64-msvc": "workspace:*",
+    "@swc/css-linux-arm64-musl": "workspace:*",
+    "@swc/css-win32-arm64-msvc": "workspace:*",
+    "@swc/css-linux-arm64-gnu": "workspace:*",
+    "@swc/css-linux-arm-gnueabihf": "workspace:*",
+    "@swc/css-android-arm-eabi": "workspace:*",
+    "@swc/css-freebsd-x64": "workspace:*",
+    "@swc/css-win32-ia32-msvc": "workspace:*"
+  },
+  "files": [
+    "binding.d.ts",
+    "binding.js",
+    "index.ts",
+    "package.json"
+  ]
 }

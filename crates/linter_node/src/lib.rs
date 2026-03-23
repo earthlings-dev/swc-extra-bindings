@@ -91,7 +91,7 @@ fn lint_inner(code: &str, opts: LintOptions) -> anyhow::Result<TransformOutput> 
             None => FileName::Anon,
         };
 
-        let fm = cm.new_source_file(Arc::new(filename), code);
+        let fm = cm.new_source_file(Arc::new(filename), code.to_owned());
 
         let mut errors = vec![];
 
